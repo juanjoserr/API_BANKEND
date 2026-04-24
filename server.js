@@ -1,11 +1,28 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import authRoutes from './src/routes/authRoutes.js';
 import itemRoutes from './src/routes/itemRoutes.js';
+import User from './src/models/User.js';
+import Item from './src/models/Item.js';
 
 // Cargar variables de entorno
 dotenv.config();
+
+// Inicializar tablas en la base de datos
+const initializeTables = async () => {
+  try {
+    await User.createTable();
+    await Item.createTable();
+    console.log('✅ Base de datos inicializada correctamente');
+  } catch (error) {
+    console.error('❌ Error al inicializar tablas:', error.message);
+  }
+};
+
+// Ejecutar inicialización
+initializeTables();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +31,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/view', express.static(path.join(process.cwd(), 'public')));
 
 // Ruta de prueba
 app.get('/', (req, res) => {
@@ -60,7 +78,7 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════╗
 ║        🚀 API Backend Iniciada        ║
@@ -77,6 +95,15 @@ app.listen(PORT, () => {
   
 ═══════════════════════════════════════════
   `);
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`❌ El puerto ${PORT} ya está en uso. Detén el servidor existente o cambia el puerto en .env antes de reiniciar.`);
+  } else {
+    console.error('❌ Error al iniciar el servidor:', error.message);
+  }
+  process.exit(1);
 });
 
 export default app;

@@ -14,7 +14,7 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelayMs: 0
+  ssl: { rejectUnauthorized: false } // 🔒 Aiven requiere SSL (cert auto-firmado)
 });
 
 // Probar conexión
